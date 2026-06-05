@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Scalefish Bookmark",
+  "version": "1.0.0",
+  "description": "快速将当前页面保存到 Scalefish 书签",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/s-16.png",
+      "48": "icons/s-48.png",
+      "128": "icons/s-128.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/s-16.png",
+    "48": "icons/s-48.png",
+    "128": "icons/s-128.png"
+  }
+}
