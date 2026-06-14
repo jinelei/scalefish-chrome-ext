@@ -13,12 +13,18 @@ const $ = (id) => document.getElementById(id)
 
 document.addEventListener('DOMContentLoaded', async () => {
   log.debug('DOMContentLoaded')
-  const { backendUrl, apiToken } = await chrome.storage.sync.get(['backendUrl', 'apiToken'])
+  const { backendUrl, apiToken, homeUrl } = await chrome.storage.sync.get(['backendUrl', 'apiToken', 'homeUrl'])
+
+  if (homeUrl) {
+    $('logoLink').addEventListener('click', () => chrome.tabs.create({ url: homeUrl }))
+    $('logoLink').title = '打开主页'
+  }
 
   if (!backendUrl || !apiToken) {
     log.warn('Backend not configured')
     $('unconfigured').style.display = 'block'
     $('mainForm').style.display = 'none'
+    $('logoLink').style.cursor = 'default'
     $('goConfigBtn').addEventListener('click', () => chrome.runtime.openOptionsPage())
     return
   }
@@ -49,9 +55,15 @@ async function api(url, token, path, options = {}) {
   if (!res.ok) {
     const body = await res.text()
     log.warn('API failed: %d %s', res.status, body)
-    throw new Error(`HTTP ${res.status}: ${body}`)
+    const err = new Error(`HTTP ${res.status}: ${body}`)
+    err.status = res.status
+    throw err
   }
   return res.json()
+}
+
+function isAuthError(e) {
+  return e.status === 401 || e.status === 403
 }
 
 async function loadCategories(url, token) {
@@ -67,7 +79,7 @@ async function loadCategories(url, token) {
     })
   } catch (e) {
     log.error('Failed to load categories:', e.message)
-    showStatus('加载分类失败: ' + e.message, 'error')
+    handleLoadError('分类', e)
   }
 }
 
@@ -100,7 +112,35 @@ async function loadTags(url, token) {
     })
   } catch (e) {
     log.error('Failed to load tags:', e.message)
-    showStatus('加载标签失败: ' + e.message, 'error')
+    handleLoadError('标签', e)
+  }
+}
+
+function handleLoadError(name, e) {
+  if (e.status === 401) {
+    showActionStatus(`⚠️ ${name}加载失败：Token 已失效，请重新配置`, 'error')
+  } else if (e.status === 403) {
+    showActionStatus(`⚠️ ${name}加载失败：服务器拒绝请求（403）\n${e.message}`, 'error')
+  } else if (e.message && e.message.includes('Failed to fetch')) {
+    showStatus(`⚠️ ${name}加载失败：无法连接到后端，请检查地址或网络`, 'error')
+  } else {
+    showStatus(`${name}加载失败: ` + e.message, 'error')
+  }
+}
+
+function showActionStatus(msg, type) {
+  const el = $('status')
+  el.className = type
+  el.innerHTML = msg.replace(/\n/g, '<br>')
+  if (!document.getElementById('statusConfigBtn')) {
+    const btn = document.createElement('button')
+    btn.id = 'statusConfigBtn'
+    btn.className = 'btn-config'
+    btn.textContent = '重新配置'
+    btn.style.cssText = 'flex:none;padding:3px 8px;font-size:11px;margin-top:6px;display:inline-block'
+    btn.addEventListener('click', () => chrome.runtime.openOptionsPage())
+    el.appendChild(document.createElement('br'))
+    el.appendChild(btn)
   }
 }
 
@@ -129,13 +169,19 @@ async function saveBookmark(url, token, tab) {
     showStatus('✅ 书签已保存！', 'success')
   } catch (e) {
     log.error('Failed to save bookmark:', e.message)
-    showStatus('保存失败: ' + e.message, 'error')
+    if (e.status === 401) {
+      showActionStatus('⚠️ 保存失败：Token 已失效，请重新配置', 'error')
+    } else if (e.status === 403) {
+      showActionStatus('⚠️ 保存失败：服务器拒绝请求（403）\n' + e.message, 'error')
+    } else {
+      showStatus('保存失败: ' + e.message, 'error')
+    }
     $('saveBtn').disabled = false
   }
 }
 
 function showStatus(msg, type) {
   const el = $('status')
-  el.textContent = msg
   el.className = type
+  el.innerHTML = msg
 }

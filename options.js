@@ -13,18 +13,21 @@ document.addEventListener('DOMContentLoaded', () => {
   log.debug('Options page loaded')
   const backendUrl = document.getElementById('backendUrl')
   const apiToken = document.getElementById('apiToken')
+  const homeUrl = document.getElementById('homeUrl')
   const saveBtn = document.getElementById('saveBtn')
   const status = document.getElementById('status')
 
-  chrome.storage.sync.get(['backendUrl', 'apiToken'], (result) => {
+  chrome.storage.sync.get(['backendUrl', 'apiToken', 'homeUrl'], (result) => {
     if (result.backendUrl) backendUrl.value = result.backendUrl
     if (result.apiToken) apiToken.value = result.apiToken
+    if (result.homeUrl) homeUrl.value = result.homeUrl
     log.debug('Loaded stored config: url=%s', result.backendUrl)
   })
 
   saveBtn.addEventListener('click', () => {
     const url = backendUrl.value.trim().replace(/\/+$/, '')
     const token = apiToken.value.trim()
+    const home = homeUrl.value.trim()
 
     if (!url) {
       showStatus('请输入后端地址', 'error')
@@ -47,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .then(() => {
         log.info('Connection successful, saving config')
-        chrome.storage.sync.set({ backendUrl: url, apiToken: token }, () => {
+        chrome.storage.sync.set({ backendUrl: url, apiToken: token, homeUrl: home }, () => {
           showStatus('保存成功！配置已生效', 'success')
         })
       })
