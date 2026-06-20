@@ -98,6 +98,34 @@
     .loading-pulse { animation: pulse 1.2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
     .empty { color: #999; font-size: 11px; padding: 4px 0; }
+    .inline-row { display: flex; gap: 6px; align-items: center; }
+    .inline-row select { flex: 1; }
+    .inline-row .btn-add {
+      flex: none; width: 32px; height: 32px; padding: 0; border-radius: 6px;
+      border: 1px solid #ddd; background: #fff; color: #666; cursor: pointer;
+      font-size: 18px; font-weight: 600; line-height: 1; transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+    }
+    .inline-row .btn-add:hover { border-color: #8562F0; color: #8562F0; }
+    .inline-form { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+    .inline-form input {
+      flex: 1; padding: 6px 8px; border-radius: 6px; border: 1px solid #ddd;
+      background: #fff; color: #333; font-size: 12px; outline: none;
+    }
+    .inline-form input:focus { border-color: #8562F0; }
+    .inline-form .btn-sm {
+      flex: none; height: 28px; padding: 0 10px; border-radius: 6px;
+      border: none; font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    }
+    .inline-form .btn-sm:hover { opacity: 0.85; }
+    .inline-form .btn-sm:disabled { opacity: 0.35; cursor: not-allowed; }
+    .inline-form .btn-confirm { background: #8562F0; color: #fff; }
+    .inline-form .btn-cancel { background: #e8e8ee; color: #666; }
+    .btn-add-tag {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 4px 9px; border-radius: 12px; background: #f0f0f4;
+      border: 1px dashed #bbb; font-size: 11px; color: #888; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-add-tag:hover { border-color: #8562F0; color: #8562F0; }
     .no-config {
       text-align: center;
       padding: 20px 0;
@@ -124,13 +152,27 @@
     </div>
     <div class="field">
       <label>分类</label>
-      <select id="categorySelect">
-        <option value="">不选择</option>
-      </select>
+      <div class="inline-row">
+        <select id="categorySelect">
+          <option value="">不选择</option>
+        </select>
+        <button class="btn-add" id="addCategoryBtn" title="新建分类">+</button>
+      </div>
+      <div class="inline-form" id="newCategoryForm" style="display:none">
+        <input id="newCategoryInput" type="text" placeholder="分类名称" />
+        <button class="btn-sm btn-confirm" id="confirmCategoryBtn">创建</button>
+        <button class="btn-sm btn-cancel" id="cancelCategoryBtn">取消</button>
+      </div>
     </div>
     <div class="field">
       <label>标签</label>
       <div id="tagList" class="tags"></div>
+      <div style="margin-top:6px"><button class="btn-add-tag" id="addTagBtn">+ 新建标签</button></div>
+      <div class="inline-form" id="newTagForm" style="display:none">
+        <input id="newTagInput" type="text" placeholder="标签名称" />
+        <button class="btn-sm btn-confirm" id="confirmTagBtn">创建</button>
+        <button class="btn-sm btn-cancel" id="cancelTagBtn">取消</button>
+      </div>
     </div>
     <div class="actions">
       <button class="btn-save" id="saveBtn">保存书签</button>

@@ -42,6 +42,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load categories and tags
   await Promise.all([loadCategories(backendUrl, apiToken), loadTags(backendUrl, apiToken)])
 
+  // Inline category creation
+  $('addCategoryBtn').addEventListener('click', () => {
+    $('newCategoryForm').style.display = 'flex'
+    $('newCategoryInput').focus()
+  })
+  $('cancelCategoryBtn').addEventListener('click', () => {
+    $('newCategoryForm').style.display = 'none'
+    $('newCategoryInput').value = ''
+  })
+  $('confirmCategoryBtn').addEventListener('click', () => createAndSelectCategory(backendUrl, apiToken))
+  $('newCategoryInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') createAndSelectCategory(backendUrl, apiToken)
+  })
+
+  // Inline tag creation
+  $('addTagBtn').addEventListener('click', () => {
+    $('newTagForm').style.display = 'flex'
+    $('newTagInput').focus()
+  })
+  $('cancelTagBtn').addEventListener('click', () => {
+    $('newTagForm').style.display = 'none'
+    $('newTagInput').value = ''
+  })
+  $('confirmTagBtn').addEventListener('click', () => createAndSelectTag(backendUrl, apiToken))
+  $('newTagInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') createAndSelectTag(backendUrl, apiToken)
+  })
+
   // Save
   $('saveBtn').addEventListener('click', () => saveBookmark(backendUrl, apiToken, tab))
 })
@@ -177,6 +205,58 @@ async function saveBookmark(url, token, tab) {
       showStatus('保存失败: ' + e.message, 'error')
     }
     $('saveBtn').disabled = false
+  }
+}
+
+async function createAndSelectCategory(url, token) {
+  const input = $('newCategoryInput')
+  const name = input.value.trim()
+  if (!name) return
+
+  $('confirmCategoryBtn').disabled = true
+  try {
+    const { data: cat } = await api(url, token, '/categories', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    })
+    const opt = document.createElement('option')
+    opt.value = cat.id
+    opt.textContent = cat.name
+    $('categorySelect').appendChild(opt)
+    $('categorySelect').value = cat.id
+    $('newCategoryForm').style.display = 'none'
+    input.value = ''
+    log.info('Category created: id=%d, name="%s"', cat.id, cat.name)
+  } catch (e) {
+    log.error('Failed to create category:', e.message)
+    showStatus('创建分类失败: ' + e.message, 'error')
+  } finally {
+    $('confirmCategoryBtn').disabled = false
+  }
+}
+
+async function createAndSelectTag(url, token) {
+  const input = $('newTagInput')
+  const name = input.value.trim()
+  if (!name) return
+
+  $('confirmTagBtn').disabled = true
+  try {
+    const { data: tag } = await api(url, token, '/tags', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    })
+    const label = document.createElement('label')
+    label.innerHTML = `<input type="checkbox" value="${tag.id}" checked /><span># ${tag.name}</span>`
+    $('tagList').appendChild(label)
+    $('newTagForm').style.display = 'none'
+    input.value = ''
+    log.info('Tag created: id=%d, name="%s"', tag.id, tag.name)
+  } catch (e) {
+    log.error('Failed to create tag:', e.message)
+    showStatus('创建标签失败: ' + e.message, 'error')
+  } finally {
+    $('confirmTagBtn').disabled = false
   }
 }
 
