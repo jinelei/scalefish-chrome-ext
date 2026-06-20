@@ -31,6 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   log.info('Initialized with backend: %s', backendUrl)
 
+  // Fetch display name from backend
+  try {
+    const configRes = await api(backendUrl, apiToken, '/app-config').catch(() => null)
+    if (configRes?.data?.display_name) {
+      $('appName').textContent = configRes.data.display_name
+    }
+  } catch (_) {}
+
   $('configBtn').addEventListener('click', () => chrome.runtime.openOptionsPage())
 
   // Get current tab info
